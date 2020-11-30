@@ -346,6 +346,5 @@ createShowActorTable()
 createShowGenreTable()
 
 
-
 #for creating one big table just run this function
-#createOneTable()
+createOneTable()
