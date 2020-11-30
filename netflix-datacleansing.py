@@ -2,8 +2,6 @@
 #before you run this script make sure that you execute the SQL script
 # Create_tables_database_netflix.sql
 #to create the tables in your mySQL database
-
-CHANGE the path for the 2 files
 '''
 
 
@@ -12,8 +10,13 @@ from sqlalchemy import create_engine
 import sqlalchemy as sqlalchemy
 
 #variable for path of the files
-path_netflix_csv = "C:/Users/nikol/OneDrive/Dokumente/Studium/TU Chemnitz/Auslandssemester/Korea/Kurse/Database Management 2/project/netflix_titles.csv"
-path_rating_description = "C:/Users/nikol/OneDrive/Dokumente/Studium/TU Chemnitz/Auslandssemester/Korea/Kurse/Database Management 2/project/Ratings-Descriptions.csv"
+#local path
+#path_netflix_csv = "C:/Users/nikol/OneDrive/Dokumente/Studium/TU Chemnitz/Auslandssemester/Korea/Kurse/Database Management 2/project/netflix_titles.csv"
+#path_rating_description = "C:/Users/nikol/OneDrive/Dokumente/Studium/TU Chemnitz/Auslandssemester/Korea/Kurse/Database Management 2/project/Ratings-Descriptions.csv"
+#github path
+path_netflix_csv = 'https://raw.githubusercontent.com/nikolaima/DBM---netflix-project/main/netflix_titles.csv'
+path_rating_description = 'https://raw.githubusercontent.com/nikolaima/DBM---netflix-project/main/Ratings-Descriptions.csv'
+
 
 # Credentials to database connection
 hostname = "localhost"
@@ -328,7 +331,6 @@ df["country"]=df["country"].fillna("Unknown")
 
 
 #==================CALL FUNCTIONS==================
-'''
 CreateShowsTable()
 
 createGenreTable()
@@ -342,8 +344,7 @@ createShowCountryTable()
 createShowDirectorTable()
 createShowActorTable()
 createShowGenreTable()
-'''
-print("test")
+
 
 
 #for creating one big table just run this function
