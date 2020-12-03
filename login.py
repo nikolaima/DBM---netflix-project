@@ -7,7 +7,7 @@ import PIL
 
 userID = 'urEmailDomain'
 home = 'UrHomeWindow'
-print("test")
+
 
 def logout2():
     global home
