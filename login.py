@@ -120,7 +120,7 @@ EntryUser.place(x=200, y = 180)
 password = Label(root, text = "Password: ", font=('arial', 10, 'bold'),
                  fg = 'blue').place(x=120, y = 230)
 EntryPass = Entry(root, width = 30, font = ('calibri', 12), highlightbackground ='blue',
-             highlightthickness = 1)
+             highlightthickness = 1, show = '*')
 EntryPass.place(x=200, y=230)
 #SUBMIT
 submit = Button(root, text = ' Login ',#image = li,
