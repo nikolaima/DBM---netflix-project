@@ -5,7 +5,7 @@ import tkinter.messagebox as MessageBox
 import hashlib
 import PIL
 
-userID = 'urEmailDomain'
+User = 'urEmailDomain'
 home = 'UrHomeWindow'
 
 
@@ -16,7 +16,7 @@ def logout2():
     print("Logged out Sucessfully...")
 
 def login():
-    global userID
+    global User
     try:
         connection = mysql.connect(host="localhost", user="root", passwd="1fcn", database='dbm_netflix_project')#
     except:
@@ -46,7 +46,7 @@ def login():
             MessageBox.showinfo("Wrong User or Password", "Please try it again")
 
 def createAccount():
-    global userID
+    global User
     login = False
     try:
         connection = mysql.connect(host="localhost", user="root", passwd="1fcn", database='dbm_netflix_project')#
@@ -69,20 +69,19 @@ def createAccount():
 
         else:
 
-            userID = (Email.split('@')[0])
             if login == True:
-                print("Logged in succesfully as", userID)
+                print("Logged in succesfully as", User)
                 newWindow()
 
 def newWindow():
-    global userID, home
+    global User, home
     root.withdraw() #CLOSE THE LOGIN WINDOW
     #open new window ==========================================
     home = Toplevel(root)
     home.title('Main Window')
     home.geometry('500x600')
     home.config(bg = 'azure')
-    something = Label(home, text="You are logged in SuccessFully\n".format(userID),
+    something = Label(home, text="You are logged in SuccessFully\n {}".format(User),
                       fg='green', bg='azure')
     something.place(x=120, y = 20)
     logout = Button(home, text='Logout ', #image = lo,
