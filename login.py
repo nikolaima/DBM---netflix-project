@@ -53,25 +53,33 @@ def createAccount():
     except:
         print("You are not connected to server(localhost)")
     else:
-        Email = EntryUser.get()
+        User = EntryUser.get()
         Password = EntryPass.get()
         cur = connection.cursor()
-        try:
-            query = "INSERT into users VALUES ('{}', sha1('{}'));".format(Email, Password)
-            cur.execute(query)
-            connection.commit()
-            connection.close()
-            login = True
-            MessageBox.showinfo("Registration succesfull", "Hello " + Email + "! \n\nYou are now a new user of our website. Have fun and we are hoping that you will find many new Netflix shows")
-        except mysql.connection.errors.IntegrityError:
-            print("username already exists")
-            MessageBox.showinfo("Warning", "The username already exists. Please use a different username")
-
+        #checks minimum length password
+        if (len(User) == 0 ):
+            MessageBox.showinfo("Invalid Username",
+                                "Please try it again.")
+        elif (len(Password)<5):
+            MessageBox.showinfo("Invalid Password",
+                                "Please try it again. Password need to have more than 5 characters")
         else:
+            try:
+                query = "INSERT into users VALUES ('{}', sha1('{}'));".format(User, Password)
+                cur.execute(query)
+                connection.commit()
+                connection.close()
+                login = True
+                MessageBox.showinfo("Registration succesfull", "Hello " + User + "! \n\nYou are now a new user of our website. Have fun and we are hoping that you will find many new Netflix shows")
+            except mysql.connection.errors.IntegrityError:
+                print("username already exists")
+                MessageBox.showinfo("Warning", "The username already exists. Please use a different username")
 
-            if login == True:
-                print("Logged in succesfully as", User)
-                newWindow()
+            else:
+
+                if login == True:
+                    print("Logged in succesfully as", User)
+                    newWindow()
 
 def newWindow():
     global User, home
