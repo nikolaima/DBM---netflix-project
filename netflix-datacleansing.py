@@ -76,8 +76,9 @@ def CreateShowsTable():
         # Convert dataframe to sql table
         df_unique.to_sql('shows', engine, if_exists='append', index=False)
         print("Data sucessfully inserted into table movies")
-    except sqlalchemy.exc.IntegrityError:
-        print('DatabaseDuplicate key entry error- the data exists already in the database')
+
+    except sqlalchemy.exc.IntegrityError as e:
+        print(e)
 
 def cleanListedIn():
     df_new = df[['listed_in']]
@@ -106,8 +107,8 @@ def createGenreTable():
         # Convert dataframe to sql table
         df_genre.to_sql('genre', engine, if_exists='append', index=False)
         print("Data sucessfully inserted into table genre")
-    except sqlalchemy.exc.IntegrityError:
-        print('DatabaseDuplicate key entry error- the data exists already in the database')
+    except sqlalchemy.exc.IntegrityError as e:
+        print(e)
 
 def cleanCast():
     df_new = df[['cast']]
@@ -136,8 +137,8 @@ def createCast():
         # Convert dataframe to sql table
         df_unique.to_sql('actor', engine, if_exists='append', index=False)
         print("Data sucessfully inserted into table actor")
-    except sqlalchemy.exc.IntegrityError:
-        print('DatabaseDuplicate key entry error- the data exists already in the database')
+    except sqlalchemy.exc.IntegrityError as e:
+        print (e)
 
 def cleanDirector():
     df_new = df[['director']]
@@ -164,8 +165,8 @@ def createTableDirector():
         # Convert dataframe to sql table
         df_diretor.to_sql('director', engine, if_exists='append', index=False)
         print("Data sucessfully inserted into table director")
-    except sqlalchemy.exc.IntegrityError:
-        print('DatabaseDuplicate key entry error- the data exists already in the database')
+    except sqlalchemy.exc.IntegrityError as e:
+        print(e)
 
 def cleanRating():
     new_df = df[['rating']]
@@ -181,16 +182,16 @@ def cleanRating():
     #merge both df together and delete duplicate column
     combinedDf = df_unique.merge(df_description, how = 'left', left_on=['rating'], right_on=['rating_id_description'])
     del combinedDf['rating_id_description']
-
     # rename column
     combinedDf = combinedDf.rename(columns={'rating': 'rating_code'})
-
+    #drop NaN as a rating category
+    combinedDf = combinedDf.dropna()
     try:
         # Convert dataframe to sql table
         combinedDf.to_sql('rating', engine, if_exists='append', index=False)
         print("Data sucessfully inserted into table rating")
-    except sqlalchemy.exc.IntegrityError:
-        print('DatabaseDuplicate key entry error- the data exists already in the database')
+    except sqlalchemy.exc.IntegrityError as e:
+        print(e)
 
 def createTableCountry():
     df_unique = cleanCountry()
@@ -198,8 +199,8 @@ def createTableCountry():
         # Convert dataframe to sql table
         df_unique.to_sql('country', engine, if_exists='append', index=False)
         print("Data sucessfully inserted into table country")
-    except sqlalchemy.exc.IntegrityError:
-        print('DatabaseDuplicate key entry error- the data exists already in the database')
+    except sqlalchemy.exc.IntegrityError as e:
+        print(e)
 
 def cleanCountry():
     df_new = df[['country']]
@@ -241,13 +242,14 @@ def createShowCountryTable():
     df_combined = new_df.merge(df_countryTable, how = 'left', left_on = ['country'], right_on = ['country2'])
     del df_combined['country2']
     del df_combined['country']
+    df_combined = df_combined.dropna()
 
     try:
         # Convert dataframe to sql table
         df_combined.to_sql('show_country', engine, if_exists='append', index=False)
         print("Data sucessfully inserted into table show_country")
-    except sqlalchemy.exc.IntegrityError:
-        print('DatabaseDuplicate key entry error- the data exists already in the database')
+    except sqlalchemy.exc.IntegrityError as e:
+        print(e)
 
 def createShowDirectorTable():
     df_new = df[['show_id','director']]
@@ -261,13 +263,14 @@ def createShowDirectorTable():
     df_combined = new_df.merge(df_director, how = 'left', left_on = ['director'], right_on = ['director2'])
     del df_combined['director']
     del df_combined['director2']
-
+    #remove duplicate values
+    df_combined.drop_duplicates(keep="first", inplace = True)
     try:
         # Convert dataframe to sql table
         df_combined.to_sql('show_director', engine, if_exists='append', index=False)
         print("Data sucessfully inserted into table show_director")
-    except sqlalchemy.exc.IntegrityError:
-        print('DatabaseDuplicate key entry error- the data exists already in the database')
+    except sqlalchemy.exc.IntegrityError as e:
+        print(e)
 
 def createShowActorTable():
     df_new = df[['show_id','cast']]
@@ -283,13 +286,15 @@ def createShowActorTable():
     del df_combined['cast']
     del df_combined['actor']
 
+    df_combined.drop_duplicates(keep="first", inplace=True)
+
     #print(df_combined)
     try:
         # Convert dataframe to sql table
         df_combined.to_sql('show_actor', engine, if_exists='append', index=False)
         print("Data sucessfully inserted into table show_actor")
-    except sqlalchemy.exc.IntegrityError:
-        print('DatabaseDuplicate key entry error- the data exists already in the database')
+    except sqlalchemy.exc.IntegrityError as e:
+        print(e)
 
 def createShowGenreTable():
     df_new = df[['show_id', 'listed_in']]
@@ -305,13 +310,12 @@ def createShowGenreTable():
     del df_combined['listed_in']
     del df_combined['genre']
 
-    print(df_combined)
     try:
         # Convert dataframe to sql table
         df_combined.to_sql('show_genre', engine, if_exists='append', index=False)
         print("Data sucessfully inserted into table show_genre")
-    except sqlalchemy.exc.IntegrityError:
-        print('DatabaseDuplicate key entry error- the data exists already in the database')
+    except sqlalchemy.exc.IntegrityError as e:
+        print(e)
 
 #========================READ MAIN CSV============================
 df = pd.read_csv(path_netflix_csv, encoding = "UTF-8" )
@@ -328,23 +332,24 @@ df['duration'] = df.apply(lambda x : x['duration'].split(" ")[0] if "Season" not
 df["director"]=df["director"].fillna("Unknown")
 df["cast"]=df["cast"].fillna("Unknown")
 df["country"]=df["country"].fillna("Unknown")
-
+#change NaN in Rating to Unrated
+df["rating"] = df["rating"].fillna("UR")
 
 #==================CALL FUNCTIONS==================
-CreateShowsTable()
+#CreateShowsTable()
 
-createGenreTable()
-createCast()
-createTableDirector()
-cleanRating()
-createTableCountry()
+#createGenreTable()
+#createCast()
+#createTableDirector()
+#cleanRating()
+#createTableCountry()
 
 #tables for m:n relations
-createShowCountryTable()
-createShowDirectorTable()
-createShowActorTable()
+#createShowCountryTable()
+#createShowDirectorTable()
+#createShowActorTable()
 createShowGenreTable()
 
 
 #for creating one big table just run this function
-createOneTable()
+#createOneTable()

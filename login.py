@@ -91,7 +91,7 @@ def newWindow():
     home.config(bg = 'azure')
     something = Label(home, text="You are logged in SuccessFully\n {}".format(User),
                       fg='green', bg='azure')
-    something.place(x=120, y = 20)
+    something.pack()
     logout = Button(home, text='Logout ', #image = lo,
                     fg = 'white', bg = 'red',
                     activebackground = 'blue',
