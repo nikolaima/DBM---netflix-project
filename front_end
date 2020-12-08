@@ -4,9 +4,21 @@ import mysql.connector
 import pprint
 from tkinter import ttk
 
+def search_now():
+    print("{}, {}, {}, {}".format(var1.get(), var2.get(), drop.get(), inputbox.get()))
+    my_query=["select film_id as FILM_ID, title as TITLE, rental_rate as RATE from film limit 15;", "Viewing Rentals"]
+    display(my_query)
+    '''
+    if var1==True and var2==True:
+        checkbox_val=""
+    '''
+
+
+
+
 def connect():
     global db
-    db = mysql.connector.connect(host='127.0.0.1', port=3006, user='', passwd='', database='sakila', auth_plugin='mysql_native_password', charset='utf8')
+    db = mysql.connector.connect(host='127.0.0.1', port=3006, user='root', passwd='password', database='sakila', auth_plugin='mysql_native_password', charset='utf8')
     return db
 
 front_end_window=Tk()
@@ -21,7 +33,8 @@ front_end_window.geometry("900x600")
 
 #update list
 def update_list():
-    sql_command = ""
+    pass
+
 
 def display(query):
     x = connect()
@@ -53,34 +66,8 @@ def display(query):
 list_movies_query=[""]
 list_tv_shows_query=[""]
     
-def search_now():
-    selected = drop.get()
-    if selected == "Search by...":
-        return
-    if selected == "Genre":
-        return
-    if selected == "Title":
-        return
-    if selected == "Release Year":
-        return
-    if selected == "Movie":
-        return
-    if selected == "TV Show":
-        return
-
-    searched = search_box.get()
-    sql = "SELECT * FROM "" WHERE "" = %s"
-    name = (searched, )
-    result = my_cursor.execute(sql, title)
-    result = my_cursor.fetchall()
-
-
-
 var1 = StringVar()
 var2 = StringVar()
-
-rentals_query=["select film_id as FILM_ID, title as TITLE, rental_rate as RATE from film limit 15;", "Viewing Rentals"]
-
 
 
 top_frame = Frame(front_end_window, bd=5)
@@ -97,20 +84,16 @@ search_button = Button(top_frame, text="Search", command=search_now)
 search_button.grid(row=1, column=5, padx=10)
 
 #drop box
-drop = ttk.Combobox(top_frame, value=["Search by....", "Genre", "Title", "Release Year", "Movie", "TV Show"])
+drop = ttk.Combobox(top_frame, value=["Genre", "Title", "Release Year", "Movie", "TV Show"])
 drop.current(0)
 drop.grid(row=1, column=3)
 
 #checkbox
 movie = Checkbutton(top_frame, text="Movie", variable=var1)
-movie.deselect()
 movie.grid(row=1, column=1, sticky=W)
 tv_show = Checkbutton(top_frame, text="TV Shows", variable=var2)
-tv_show.deselect()
-
-
-
 tv_show.grid(row=1, column=2, sticky=W)
+
 types = Label(top_frame, text="Type:")
 types.grid(row=1, column=0, sticky=W)
 
@@ -127,19 +110,6 @@ tvshow_list_button.grid(row=2, column=3, padx=10, pady=10, sticky=W)
 
 middle_frame = Frame(front_end_window, bg="#80c1ff", bd=5)
 middle_frame.place(relwidth=1, relheight= 0.70, relx=0.5, rely=0.20, anchor=N)
-
-
-"""""
-r_bottom_frame = Frame(front_end_window, bd=5)
-r_bottom_frame.place(relwidth=1, relheight= 0.10,relx=0.5, rely=1, anchor=S)
-
-
-#optional
-
-clear_button=Button(r_bottom_frame, text="Clear", padx=20, command=lambda:clear_box())
-clear_button.pack(side=RIGHT)
-"""
-
 
 
 
