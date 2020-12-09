@@ -7,14 +7,70 @@ from tkinter import ttk
 def search_now():
     #default filter
     print("{}, {}, {}, {}".format(var1.get(), var2.get(), drop.get(), inputbox.get()))
-    my_query=["SELECT title, type, duration, description FROM shows LIMIT 50;", "Viewing Rentals"]
 
-    '''
-    
-    if var1==True and var2==True:
-        checkbox_val=""
-    '''
+    #variables
+    checkMovie = int(var1.get())
+    checkShow = int(var2.get())
+    if ((checkMovie == True) & (checkShow == False)):
+        target = "movies"
+    elif ((checkMovie == False) & (checkShow == True)):
+        target = "tvShows"
+    elif ((checkMovie == True) & (checkShow == True)):
+        target = "shows"
+    elif ((checkMovie == False) & (checkShow == False)):
+        target = "shows"
 
+    query = "SELECT title, type, description FROM {}".format(target)
+
+    actorDirector = drop.get()
+    actorDirectorValue = inputbox.get()
+    ifGenre = genreSelected.get()
+    topic = topicBox.get()
+
+
+    if (ifGenre == 'Every genre'):
+
+        if ((actorDirector == "Actor") and  inputbox.index("end") != 0):
+            query = ("SELECT s.title, s.type, s.release_year, a.actor FROM (actor a join show_actor sa on a.actor_id = sa.actor_id) JOIN {} s on sa.show_id = s.show_id WHERE a.actor LIKE '%{}%' AND s.description LIKE '%{}%'").format(target,actorDirectorValue, topic)
+        elif((actorDirector == "Director") and  inputbox.index("end") != 0):
+            query = ("SELECT s.title, s.type, s.release_year, s.duration, d.director FROM (director d join show_director sd on d.director_id = sd.director_id) JOIN {} s on sd.show_id = s.show_id WHERE d.director LIKE '%{}%' AND s.description LIKE '%{}%'").format(target, actorDirectorValue, topic)
+        elif inputbox.index("end") == 0:
+            query = ("SELECT s.title, s.type, s.release_year, s.description  FROM {} s WHERE s.description LIKE '%{}%'").format(target, topic)
+
+    else:
+        if ((actorDirector == "Actor") and inputbox.index("end") != 0):
+            query = ("""
+                SELECT s.title, s.type, s.release_year, s.duration FROM 
+                    (actor a join show_actor sa on a.actor_id = sa.actor_id)
+                    JOIN {} s on sa.show_id = s.show_id
+                    join show_genre sg on s.show_id = sg.show_id
+                    JOIN genre g ON sg.genre_id = g.genre_id
+                    WHERE a.actor LIKE '%{}%' AND g.genre = '{}' AND s.description LIKE '%{}%'
+                    GROUP BY s.title
+                """).format(target, actorDirectorValue, ifGenre, topic)
+
+        elif ((actorDirector == "Director") and inputbox.index("end") != 0):
+            query = ("""
+            SELECT s.title, s.type, s.release_year, s.duration, d.director FROM 
+                ((( director d join show_director sd on d.director_id = sd.director_id)
+                JOIN {} s on sd.show_id = s.show_id) 
+                JOIN show_genre sg ON s.show_id = sg.show_id)
+                JOIN genre g ON sg.genre_id = g.genre_id
+                WHERE d.director LIKE '%{}%' AND g.genre = '{}' AND s.description LIKE '%{}%'
+                GROUP BY s.title
+            """).format(target, actorDirectorValue, ifGenre, topic)
+        elif inputbox.index("end") == 0:
+            query = ("""
+            SELECT s.title, s.type, s.release_year, s.description  FROM {} s
+            JOIN show_genre sg ON s.show_id = sg.show_id
+            JOIN genre g ON sg.genre_id = g.genre_id
+            WHERE g.genre = '{}' AND s.description LIKE '%{}%'
+            """
+            ).format(target, ifGenre, topic)
+
+
+    print(query)
+    my_query = [query + " LIMIT 150;", "Viewing Rentals"]
     #print(filter)
     print(my_query)
     display(my_query)
@@ -50,6 +106,7 @@ def update_list():
 
 
 def display(query):
+    clearFrame()
     x = connect()
     c = x.cursor()
     c.execute(query[0])
@@ -74,9 +131,14 @@ def display(query):
             e.insert(END, result[i][j])
     x.close()
 
+def clearFrame():
+    for widget in middle_frame.winfo_children():
+        widget.destroy()
+    columns = 0
+
 #please wite the query here
 list_movies_query=["SELECT title, duration, description FROM shows;", "Viewing Movies"]
-list_tv_shows_query=["SELECT title, duration, description FROM shows;", "Viewing TV SHOWS"]
+list_tv_shows_query=["SELECT title, description FROM shows;", "Viewing TV SHOWS"]
     
 var1 = StringVar()
 var2 = StringVar()
@@ -127,10 +189,10 @@ types = Label(top_frame, text="Type:")
 types.grid(row=2, column=1, sticky=W)
 
 #OptionMenu
-variable2 = StringVar(top_frame)
-variable2.set(genre[0]) # default value
+genreSelected = StringVar(top_frame)
+genreSelected.set(genre[0]) # default value
 
-w2 = OptionMenu(top_frame, variable2, *genre)
+w2 = OptionMenu(top_frame, genreSelected, *genre)
 w2.grid(row=3, column = 2, pady = 5, columnspan = 2)
 label_w2 = Label(top_frame, text="Genre:")
 label_w2.grid(row=3, column=1, sticky=W, pady = 5)
