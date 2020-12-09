@@ -6,8 +6,7 @@ from tkinter import ttk
 
 def search_now():
     #default filter
-    print("{}, {}, {}, {}".format(var1.get(), var2.get(), drop.get(), inputbox.get()))
-
+   # print("{}, {}, {}, {}".format(var1.get(), var2.get(), drop.get(), inputbox.get()))
     #variables
     checkMovie = int(var1.get())
     checkShow = int(var2.get())
@@ -31,27 +30,27 @@ def search_now():
     if (ifGenre == 'Every genre'):
 
         if ((actorDirector == "Actor") and  inputbox.index("end") != 0):
-            query = ("SELECT s.title, s.type, s.release_year, a.actor FROM (actor a join show_actor sa on a.actor_id = sa.actor_id) JOIN {} s on sa.show_id = s.show_id WHERE a.actor LIKE '%{}%' AND s.description LIKE '%{}%'").format(target,actorDirectorValue, topic)
+            query = ("SELECT s.title, s.type, s.release_year, s.description, s.show_id FROM (actor a join show_actor sa on a.actor_id = sa.actor_id) JOIN {} s on sa.show_id = s.show_id WHERE a.actor LIKE '%{}%' AND s.description LIKE '%{}%'").format(target,actorDirectorValue, topic)
         elif((actorDirector == "Director") and  inputbox.index("end") != 0):
-            query = ("SELECT s.title, s.type, s.release_year, s.duration, d.director FROM (director d join show_director sd on d.director_id = sd.director_id) JOIN {} s on sd.show_id = s.show_id WHERE d.director LIKE '%{}%' AND s.description LIKE '%{}%'").format(target, actorDirectorValue, topic)
+            query = ("SELECT s.title, s.type, s.release_year, s.description, s.show_id FROM (director d join show_director sd on d.director_id = sd.director_id) JOIN {} s on sd.show_id = s.show_id WHERE d.director LIKE '%{}%' AND s.description LIKE '%{}%'").format(target, actorDirectorValue, topic)
         elif inputbox.index("end") == 0:
-            query = ("SELECT s.title, s.type, s.release_year, s.description  FROM {} s WHERE s.description LIKE '%{}%'").format(target, topic)
+            query = ("SELECT s.title, s.type, s.release_year, s.description, s.show_id FROM {} s WHERE s.description LIKE '%{}%'").format(target, topic)
 
     else:
         if ((actorDirector == "Actor") and inputbox.index("end") != 0):
             query = ("""
-                SELECT s.title, s.type, s.release_year, s.duration FROM 
+                SELECT s.title, s.type, s.release_year, s.description , s.show_id FROM 
                     (actor a join show_actor sa on a.actor_id = sa.actor_id)
                     JOIN {} s on sa.show_id = s.show_id
                     join show_genre sg on s.show_id = sg.show_id
                     JOIN genre g ON sg.genre_id = g.genre_id
                     WHERE a.actor LIKE '%{}%' AND g.genre = '{}' AND s.description LIKE '%{}%'
-                    GROUP BY s.title
+                    GROUP BY 1,2
                 """).format(target, actorDirectorValue, ifGenre, topic)
 
         elif ((actorDirector == "Director") and inputbox.index("end") != 0):
             query = ("""
-            SELECT s.title, s.type, s.release_year, s.duration, d.director FROM 
+            SELECT s.title, s.type, s.release_year, s.description, s.description, s.show_id FROM 
                 ((( director d join show_director sd on d.director_id = sd.director_id)
                 JOIN {} s on sd.show_id = s.show_id) 
                 JOIN show_genre sg ON s.show_id = sg.show_id)
@@ -61,7 +60,7 @@ def search_now():
             """).format(target, actorDirectorValue, ifGenre, topic)
         elif inputbox.index("end") == 0:
             query = ("""
-            SELECT s.title, s.type, s.release_year, s.description  FROM {} s
+            SELECT s.title, s.type, s.release_year, s.description, s.show_id  FROM {} s
             JOIN show_genre sg ON s.show_id = sg.show_id
             JOIN genre g ON sg.genre_id = g.genre_id
             WHERE g.genre = '{}' AND s.description LIKE '%{}%'
@@ -69,10 +68,10 @@ def search_now():
             ).format(target, ifGenre, topic)
 
 
-    print(query)
+    #print(query)
     my_query = [query + " LIMIT 150;", "Viewing Rentals"]
     #print(filter)
-    print(my_query)
+    #print(my_query)
     display(my_query)
 
 
@@ -91,7 +90,7 @@ def getFilterValues():
         genre.append(i[0])
 
 front_end_window=Tk()
-front_end_window.title("Return Rental")
+front_end_window.title("NetflixSurfer - What Should I Watch?")
 front_end_window.geometry("1000x800")
 
 #creating a cursor and initializing it
@@ -105,41 +104,67 @@ def update_list():
     pass
 
 
+trv = ttk.Treeview()
 def display(query):
+    def update(rows):
+        for i in rows:
+            trv.insert('', 'end', values=i)
+
     clearFrame()
     x = connect()
     c = x.cursor()
     c.execute(query[0])
-    result = c.fetchall()
+    rows = c.fetchall()
+    global trv
+    trv = ttk.Treeview(middle_frame, columns = (1,2,3,4,5), show = "headings", height = "28")
+    trv.pack(side = 'left',expand=True, fill='both')
+    trv.heading(1, text = "Title")
+    trv.heading(2, text="Type")
+    trv.heading(3, text="Release Year")
+    trv.heading(4, text="Description")
+    trv.heading(5, text="showId")
+    trv.column("1",minwidth=0, width = 200, anchor = 'c')
+    trv.column("2",minwidth=0, width=100, anchor='c')
+    trv.column("3",minwidth=0, width = 100, anchor = 'c')
+    trv.column("4",minwidth=0, width=500, anchor='c')
+    trv.column("5",stretch = NO,minwidth=0, width=0)
+    trv.grid_columnconfigure(1, weight=1)
+    trv.grid_columnconfigure(2, weight=1)
+    trv.grid_columnconfigure(3, weight=1)
+    trv.grid_columnconfigure(4, weight=10)
+    trv.grid_columnconfigure(5, weight=0)
+    update(rows)
 
-    # Label in top row
-    t=1
-    columns = c.column_names
-    print(columns)
-    label = Label(middle_frame, text=query[1])
-    label.grid(row=0, column=2)
-    #create column names
-    for i in range(len(columns)):
-        e = Entry(middle_frame, width=20, fg='blue')
-        e.grid(row=1, column=i)
-        e.insert(END, columns[i])
+    vsb = ttk.Scrollbar(middle_frame, orient="vertical", command = trv.yview)
+    vsb.pack(side='right', fill ='y')
+    trv.configure(yscrollcommand=vsb.set)
 
-    for i in range(len(result)):
-        for j in range(len(columns)):
-            e = Entry(middle_frame, width=20, fg='blue')
-            e.grid(row=i+2, column=j)
-            e.insert(END, result[i][j])
     x.close()
+
+
+def selectItem():
+    print(trv)
+    curItem = trv.focus()
+    print (trv.item(curItem)['values'])
+
+
+trv.bind("<<TreeviewSelect>>", selectItem) # single click, without "index out of range" error
+
+
 
 def clearFrame():
     for widget in middle_frame.winfo_children():
         widget.destroy()
-    columns = 0
+    tv_show.select()
+    movie.select()
+    topicBox.delete(0, 'end')
+    inputbox.delete(0, 'end')
+
 
 #please wite the query here
 list_movies_query=["SELECT title, duration, description FROM shows;", "Viewing Movies"]
 list_tv_shows_query=["SELECT title, description FROM shows;", "Viewing TV SHOWS"]
-    
+
 var1 = StringVar()
 var2 = StringVar()
 genre = ["Every genre"]
@@ -147,15 +172,25 @@ genre = ["Every genre"]
 #variable getvalues
 getFilterValues()
 
-top_frame = Frame(front_end_window, bd=5)
-top_frame.place(relwidth=1, relheight= 0.20, relx=0.5, rely=0.1, anchor=CENTER)
+top_frame = Frame(front_end_window, bd=5, height = 300, width = 1000)
+#top_frame.place(relwidth=1, relheight= 0.20, relx=0.5, rely=0.1, anchor=CENTER)
 #top_frame.columnconfigure(0, weight=3)
-label=Label(top_frame, text="Full List of Movies and TV Shows on Netflix", font="Arial 15 bold", fg='blue3')
-label.grid(row=0,column=1, sticky=N, columnspan = 100)
-label=Label(top_frame, text="Are you wondering what's new – or what's best – on Netflix? \n Flixable is a search engine for video streaming services that offers a complete list \n"
+top_frame.pack(side = TOP)
+
+middle_frame = Frame(front_end_window, bg="#80c1ff", bd=5, height = 600, width = 1000)
+#middle_frame.place(relwidth=1, relheight= 0.70, relx=0.5, rely=0.20, anchor=N)
+middle_frame.pack(fill = "both", expand = True)
+
+bottom_frame = Frame(front_end_window, height = 100, width = 1000)
+bottom_frame.pack(fill = X, side = BOTTOM)
+
+
+label=Label(top_frame, text="Full List of Movies and TV Shows on Netflix", font="Arial 15 bold", fg='red2')
+label.grid(row=0,column=1,sticky="nsew", columnspan = 5)
+label=Label(top_frame, text="Are you wondering what's new – or what's best – on Netflix? \n NetflixSurfer is an application for video streaming services that offers a complete list \n"
                             "of all the movies and TV shows that are currently streaming on Netflix in the U.S.",
-            font="Arial 8", fg='blue3')
-label.grid(row=1,column=1, sticky=N, columnspan = 100)
+            font="Arial 8", fg='red1')
+label.grid(row=1,column=1,sticky="nsew",  columnspan = 5)
 
 
 #entry box to search
@@ -163,7 +198,7 @@ inputbox = Entry(top_frame, width=50)
 inputbox.grid(row=2,column=5, sticky=W)
 
 search_button = Button(top_frame, text="Search", command=search_now)
-search_button.grid(row=2, column=6, padx=10)
+search_button.grid(row=2, column=6, padx=10, rowspan = 2)
 
 
 types = Label(top_frame, text="Enter a topic you want to watch:")
@@ -188,6 +223,10 @@ tv_show.select()
 types = Label(top_frame, text="Type:")
 types.grid(row=2, column=1, sticky=W)
 
+# leave outside row + columns empty to centre
+top_frame.grid_columnconfigure(0, weight=1)
+top_frame.grid_columnconfigure(8, weight=1)
+
 #OptionMenu
 genreSelected = StringVar(top_frame)
 genreSelected.set(genre[0]) # default value
@@ -208,9 +247,10 @@ movie_list_button = Button(top_frame, text="Show All Movies", command=lambda: di
 tvshow_list_button = Button(top_frame, text="Show All TV Shows", command=lambda: display(list_tv_shows_query))
 #tvshow_list_button.grid(row=2, column=3, padx=10, pady=10, sticky=W)
 
-middle_frame = Frame(front_end_window, bg="#80c1ff", bd=5)
-middle_frame.place(relwidth=1, relheight= 0.70, relx=0.5, rely=0.20, anchor=N)
+btn_Clear = Button(bottom_frame, text = "Clear", width = 15, command = clearFrame)
+btn_Clear.pack(side = RIGHT, pady = 10, padx = 5)
 
-
+btn_Clear = Button(bottom_frame, text = "Add to my list", width = 15, command = selectItem())
+btn_Clear.pack(side = RIGHT, pady = 10, padx = 5)
 
 front_end_window.mainloop()
