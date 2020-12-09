@@ -3,6 +3,7 @@ import random
 import mysql.connector
 import pprint
 from tkinter import ttk
+import tkinter.messagebox as MessageBox
 
 def search_now():
     #default filter
@@ -88,7 +89,7 @@ def getFilterValues():
     con.close()
     for i in rows:
         genre.append(i[0])
-
+global front_end_window
 front_end_window=Tk()
 front_end_window.title("NetflixSurfer - What Should I Watch?")
 front_end_window.geometry("1000x800")
@@ -104,13 +105,13 @@ def update_list():
     pass
 
 
-trv = ttk.Treeview()
+
 def display(query):
     def update(rows):
         for i in rows:
             trv.insert('', 'end', values=i)
 
-    clearFrame()
+    clearMiddleFrame()
     x = connect()
     c = x.cursor()
     c.execute(query[0])
@@ -142,13 +143,32 @@ def display(query):
     x.close()
 
 
-def selectItem():
-    print(trv)
-    curItem = trv.focus()
-    print (trv.item(curItem)['values'])
+    def selectItem(a):
+        print(trv)
+        curItem = trv.focus()
+        print (trv.item(curItem)['values'])
+        con = connect()
+        cur = con.cursor()
+        print(user_name)
+        print((trv.item(curItem)['values'])[4])
+
+        try:
+            connection = connect()
+            cur = connection.cursor()
+            query = "INSERT INTO USERS_SHOWS VALUES ('{}', '{}', NOW());".format(user_name,
+                                                                                 (trv.item(curItem)['values'])[4])
+            cur.execute(query)
+            connection.commit()
+            connection.close()
+            MessageBox.showinfo("Movie/Show added", "The movie is now on your watchList!")
+        except mysql.connector.errors.IntegrityError:
+            print("movie is already on the list")
+            MessageBox.showinfo("Warning", "The movie is already on your watchList")
 
 
-trv.bind("<<TreeviewSelect>>", selectItem) # single click, without "index out of range" error
+
+
+    trv.bind("<<TreeviewSelect>>", selectItem) # single click, without "index out of range" error
 
 
 
@@ -160,6 +180,40 @@ def clearFrame():
     topicBox.delete(0, 'end')
     inputbox.delete(0, 'end')
 
+def clearMiddleFrame():
+    for widget in middle_frame.winfo_children():
+        widget.destroy()
+
+def openWindow():
+    global customer_name
+    top = Toplevel()
+    top.geometry("600x500")
+    top.title("myWatchList")
+
+
+    label = Label(top, text="Your watchList", font="Arial 15 bold", fg='red2')
+    label.grid()
+    middle_frame2 = Frame(top,bg = 'coral').grid()
+
+    con = connect()
+    cur = con.cursor()
+    query = ("""
+                SELECT s.title, s.release_year, s.description, us.last_update AS 'DATEADDED' FROM users_shows us JOIN shows s ON us.show_id = s.show_id WHERE us.user_name = '{}';
+                """).format(user_name)
+    cur.execute(query)
+    rows = cur.fetchall()
+    con.close()
+
+    print(rows)
+
+    ##Just show the movies and maybe an option to delete it out of the database
+
+
+
+
+
+
+
 
 #please wite the query here
 list_movies_query=["SELECT title, duration, description FROM shows;", "Viewing Movies"]
@@ -168,6 +222,9 @@ list_tv_shows_query=["SELECT title, description FROM shows;", "Viewing TV SHOWS"
 var1 = StringVar()
 var2 = StringVar()
 genre = ["Every genre"]
+
+#standard testUser
+user_name = "admin"
 
 #variable getvalues
 getFilterValues()
@@ -207,6 +264,9 @@ types.grid(row=3, column=4, sticky=W)
 topicBox = Entry(top_frame, width=50)
 topicBox.grid(row=3,column=5, sticky=W)
 
+addLabel = Label(bottom_frame, text="Add a Movie/Show per double click to your watchlist", font = ("Arial", 10), fg = "red2")
+addLabel.pack(side = LEFT)
+
 #drop box
 drop = ttk.Combobox(top_frame, value=["Actor", "Director"])
 drop.current(0)
@@ -240,17 +300,13 @@ label_w2.grid(row=3, column=1, sticky=W, pady = 5)
 update_button = Button(top_frame, text="Update List", command=update_list)
 #update_button.grid(row=2, column=1, padx=10, pady=10, sticky=W)
 
-#list all movie
-movie_list_button = Button(top_frame, text="Show All Movies", command=lambda: display(list_movies_query))
-#movie_list_button.grid(row=2, column=2, padx=10, pady=10, sticky=W)
 
-tvshow_list_button = Button(top_frame, text="Show All TV Shows", command=lambda: display(list_tv_shows_query))
-#tvshow_list_button.grid(row=2, column=3, padx=10, pady=10, sticky=W)
+
 
 btn_Clear = Button(bottom_frame, text = "Clear", width = 15, command = clearFrame)
 btn_Clear.pack(side = RIGHT, pady = 10, padx = 5)
 
-btn_Clear = Button(bottom_frame, text = "Add to my list", width = 15, command = selectItem())
-btn_Clear.pack(side = RIGHT, pady = 10, padx = 5)
+myList = Button(bottom_frame, text = "Go to your WatchList", width = 15, command = openWindow)
+myList.pack(side = RIGHT, pady = 10, padx = 5)
 
 front_end_window.mainloop()
