@@ -5,15 +5,9 @@ import tkinter.messagebox as MessageBox
 import hashlib
 import PIL
 
-User = 'urEmailDomain'
-home = 'UrHomeWindow'
-
-
-def logout2():
-    global home
-    home.withdraw()
-    root.deiconify()
-    print("Logged out Sucessfully...")
+User = ""
+def getUser():
+    return User
 
 def login():
     global User
@@ -39,6 +33,7 @@ def login():
                 break
             else:
                 login = False
+
         if login == True:
             print("Logged in succesfully as", User)
             newWindow()
@@ -65,39 +60,27 @@ def createAccount():
                                 "Please try it again. Password need to have more than 5 characters")
         else:
             try:
-                query = "INSERT into users VALUES ('{}', sha1('{}'));".format(User, Password)
+                query = "INSERT into users VALUES ('{}', sha1('{}'), NOW());".format(User, Password)
                 cur.execute(query)
                 connection.commit()
                 connection.close()
                 login = True
-                MessageBox.showinfo("Registration succesfull", "Hello " + User + "! \n\nYou are now a new user of our website. Have fun and we are hoping that you will find many new Netflix shows")
+                MessageBox.showinfo("Registration succesfull", "Hello " + User + "! \n\nYou are now a new user of our website. Have fun and we are hoping that you will find your perfect Netflix show")
             except mysql.connection.errors.IntegrityError:
                 print("username already exists")
                 MessageBox.showinfo("Warning", "The username already exists. Please use a different username")
 
-            else:
-
-                if login == True:
-                    print("Logged in succesfully as", User)
-                    newWindow()
+        if login == True:
+            print("Logged in succesfully as", User)
+            newWindow()
 
 def newWindow():
-    global User, home
-    root.withdraw() #CLOSE THE LOGIN WINDOW
-    #open new window ==========================================
-    home = Toplevel(root)
-    home.title('Main Window')
-    home.geometry('500x600')
-    home.config(bg = 'azure')
-    something = Label(home, text="You are logged in SuccessFully\n {}".format(User),
-                      fg='green', bg='azure')
-    something.pack()
-    logout = Button(home, text='Logout ', #image = lo,
-                    fg = 'white', bg = 'red',
-                    activebackground = 'blue',
-                    width = 13, height = 1, command = logout2, compound = LEFT)
-    logout.pack(anchor = 'se')
-    #home.mainloop()
+    print("X")
+    root.destroy()
+    import front_end
+    front_end.front_end_window.mainloop()
+
+
 
 #root window
 root = Tk()
