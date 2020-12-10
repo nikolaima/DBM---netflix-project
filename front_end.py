@@ -4,6 +4,17 @@ import mysql.connector
 import pprint
 from tkinter import ttk
 import tkinter.messagebox as MessageBox
+from login import getUser
+
+global user_name
+user_name = getUser()
+
+
+
+def logout():
+    front_end_window.destroy()
+    import login
+    login.root.mainloop()
 
 def search_now():
     #default filter
@@ -89,6 +100,9 @@ def getFilterValues():
     con.close()
     for i in rows:
         genre.append(i[0])
+
+
+
 global front_end_window
 front_end_window=Tk()
 front_end_window.title("NetflixSurfer - What Should I Watch?")
@@ -258,7 +272,9 @@ var2 = StringVar()
 genre = ["Every genre"]
 
 #standard testUser
-user_name = "admin"
+#user_name = "admin"
+#user_name = User
+
 
 #variable getvalues
 getFilterValues()
@@ -343,10 +359,16 @@ btn_Clear.pack(side = RIGHT, pady = 10, padx = 5)
 myList = Button(bottom_frame, text = "Go to your WatchList", width = 20, command = openWindow)
 myList.pack(side = RIGHT, pady = 10, padx = 5)
 
+logout = Button(top_frame, text='Logout ',
+                fg='white', bg='red',
+                activebackground='blue',
+                width=13, height=1, command=logout, compound=RIGHT)
+logout.grid(row = 0, column = 7, sticky = E)
+
 #defaultButton = ttk.Button(bottom_frame, text="Add watchlist", width=20)
 #defaultButton.pack(side=RIGHT, pady=10, padx=5)
 
 defaultButton = ttk.Button(bottom_frame, text="Add watchlist", width=20, command=lambda: addWatchlist(1))
 defaultButton.pack(side=RIGHT, pady=10, padx=5)
 
-front_end_window.mainloop()
+#front_end_window.mainloop()
