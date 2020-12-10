@@ -142,34 +142,31 @@ def display(query):
 
     x.close()
 
+#add a movie to a personal list of the current user
+def addWatchlist(a):
+    #print(trv)
+    curItem = trv.focus()
+    #print (trv.item(curItem)['values'])
+    con = connect()
+    cur = con.cursor()
+    #print(user_name)
+    #print((trv.item(curItem)['values'])[4])
+    try:
+        connection = connect()
+        cur = connection.cursor()
+        query = "INSERT INTO USERS_SHOWS VALUES ('{}', '{}', NOW());".format(user_name,
+                                                                             (trv.item(curItem)['values'])[4])
+        cur.execute(query)
+        connection.commit()
+        connection.close()
+        MessageBox.showinfo("Movie/Show added", "The movie is now on your watchList!")
+    except mysql.connector.errors.IntegrityError:
+        print("movie is already on the list")
+        MessageBox.showinfo("Warning", "The movie is already on your watchList")
 
-    def selectItem(a):
-        #print(trv)
-        curItem = trv.focus()
-        #print (trv.item(curItem)['values'])
-        con = connect()
-        cur = con.cursor()
-        #print(user_name)
-        #print((trv.item(curItem)['values'])[4])
-        try:
-            connection = connect()
-            cur = connection.cursor()
-            query = "INSERT INTO USERS_SHOWS VALUES ('{}', '{}', NOW());".format(user_name,
-                                                                                 (trv.item(curItem)['values'])[4])
-            cur.execute(query)
-            connection.commit()
-            connection.close()
-            MessageBox.showinfo("Movie/Show added", "The movie is now on your watchList!")
-        except mysql.connector.errors.IntegrityError:
-            print("movie is already on the list")
-            MessageBox.showinfo("Warning", "The movie is already on your watchList")
-
-    defaultButton.destroy()
-    button = ttk.Button(bottom_frame, text="Add watchlist", width=20, command=lambda: selectItem(1))
-    button.pack(side=RIGHT, pady=10, padx=5)
-
-    #trv.bind("<<TreeviewSelect>>", selectItem) # single click, without "index out of range" error
-
+#defaultButton.pack_forget()
+#defaultButton.destroy()
+#trv.bind("<<TreeviewSelect>>", selectItem) # single click, without "index out of range" error
 
 
 def clearFrame():
@@ -190,16 +187,15 @@ def openWindow():
     top.geometry("900x500")
     top.title("myWatchList")
 
+    #frames and label of the new window
     top_frame2 = Frame(top, height=120, width=600, bg =  'coral')
     top_frame2.pack(fill=BOTH)
     middle_frame2 = Frame(top, bg='azure', height=320, width=600)
     middle_frame2.pack(fill=BOTH, expand=True)
-
-
-
     label = Label(top_frame2, text="Your watchList", font="Arial 15 bold", fg='white', bg = 'coral')
     label.pack(side = 'bottom')
 
+    #connection to the database to get the movies of the user
     con = connect()
     cur = con.cursor()
     query = ("""
@@ -209,16 +205,14 @@ def openWindow():
     rows = cur.fetchall()
     con.close()
 
-
     ##Just show the movies and maybe an option to delete it out of the database
     def update(rows):
         for i in rows:
             trv2.insert('', 'end', values=i)
-
     def selectItem(a):
         # print(trv)
         curItem = trv2.focus()
-        print (trv2.item(curItem)['values'])
+        #print (trv2.item(curItem)['values'])
 
         try:
             connection = connect()
@@ -258,10 +252,6 @@ def openWindow():
     button = ttk.Button(top_frame2, text="Delete movie/show", width=25, command=lambda: selectItem(1))
     button.pack(side=RIGHT, pady=10, padx=5)
 
-
-#please wite the query here
-list_movies_query=["SELECT title, duration, description FROM shows;", "Viewing Movies"]
-list_tv_shows_query=["SELECT title, description FROM shows;", "Viewing TV SHOWS"]
 
 var1 = StringVar()
 var2 = StringVar()
@@ -353,7 +343,10 @@ btn_Clear.pack(side = RIGHT, pady = 10, padx = 5)
 myList = Button(bottom_frame, text = "Go to your WatchList", width = 20, command = openWindow)
 myList.pack(side = RIGHT, pady = 10, padx = 5)
 
-defaultButton = ttk.Button(bottom_frame, text="Add watchlist", width=20)
+#defaultButton = ttk.Button(bottom_frame, text="Add watchlist", width=20)
+#defaultButton.pack(side=RIGHT, pady=10, padx=5)
+
+defaultButton = ttk.Button(bottom_frame, text="Add watchlist", width=20, command=lambda: addWatchlist(1))
 defaultButton.pack(side=RIGHT, pady=10, padx=5)
 
 front_end_window.mainloop()
