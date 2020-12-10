@@ -144,14 +144,13 @@ def display(query):
 
 
     def selectItem(a):
-        print(trv)
+        #print(trv)
         curItem = trv.focus()
-        print (trv.item(curItem)['values'])
+        #print (trv.item(curItem)['values'])
         con = connect()
         cur = con.cursor()
-        print(user_name)
-        print((trv.item(curItem)['values'])[4])
-
+        #print(user_name)
+        #print((trv.item(curItem)['values'])[4])
         try:
             connection = connect()
             cur = connection.cursor()
@@ -165,10 +164,11 @@ def display(query):
             print("movie is already on the list")
             MessageBox.showinfo("Warning", "The movie is already on your watchList")
 
+    defaultButton.destroy()
+    button = ttk.Button(bottom_frame, text="Add watchlist", width=20, command=lambda: selectItem(1))
+    button.pack(side=RIGHT, pady=10, padx=5)
 
-
-
-    trv.bind("<<TreeviewSelect>>", selectItem) # single click, without "index out of range" error
+    #trv.bind("<<TreeviewSelect>>", selectItem) # single click, without "index out of range" error
 
 
 
@@ -187,32 +187,76 @@ def clearMiddleFrame():
 def openWindow():
     global customer_name
     top = Toplevel()
-    top.geometry("600x500")
+    top.geometry("900x500")
     top.title("myWatchList")
 
+    top_frame2 = Frame(top, height=120, width=600, bg =  'coral')
+    top_frame2.pack(fill=BOTH)
+    middle_frame2 = Frame(top, bg='azure', height=320, width=600)
+    middle_frame2.pack(fill=BOTH, expand=True)
 
-    label = Label(top, text="Your watchList", font="Arial 15 bold", fg='red2')
-    label.grid()
-    middle_frame2 = Frame(top,bg = 'coral').grid()
+
+
+    label = Label(top_frame2, text="Your watchList", font="Arial 15 bold", fg='white', bg = 'coral')
+    label.pack(side = 'bottom')
 
     con = connect()
     cur = con.cursor()
     query = ("""
-                SELECT s.title, s.release_year, s.description, us.last_update AS 'DATEADDED' FROM users_shows us JOIN shows s ON us.show_id = s.show_id WHERE us.user_name = '{}';
+                SELECT s.title, s.type, s.release_year, s.description,  us.last_update, s.show_id AS 'DATEADDED' FROM users_shows us JOIN shows s ON us.show_id = s.show_id WHERE us.user_name = '{}';
                 """).format(user_name)
     cur.execute(query)
     rows = cur.fetchall()
     con.close()
 
-    print(rows)
 
     ##Just show the movies and maybe an option to delete it out of the database
+    def update(rows):
+        for i in rows:
+            trv2.insert('', 'end', values=i)
 
+    def selectItem(a):
+        # print(trv)
+        curItem = trv2.focus()
+        print (trv2.item(curItem)['values'])
 
+        try:
+            connection = connect()
+            cur = connection.cursor()
+            query = "DELETE FROM users_shows WHERE user_name = '{}' AND show_id = '{}';".format(user_name,
+                                                                                 (trv2.item(curItem)['values'])[5])
+            cur.execute(query)
+            connection.commit()
+            connection.close()
+            MessageBox.showinfo("Movie/Show deleted", "The movie is not longer on your watchList!")
+        except mysql.connector.errors.IntegrityError:
+            print("movie is already deleted")
+            MessageBox.showinfo("Warning", "Reload your watchlist")
 
+    global trv2
+    trv2 = ttk.Treeview(middle_frame2, columns=(1, 2, 3, 4, 5, 6), show="headings", height="28")
+    trv2.pack(side='left', expand=True, fill='both')
+    trv2.heading(1, text="Title")
+    trv2.heading(2, text="Type")
+    trv2.heading(3, text="Release Year")
+    trv2.heading(4, text="Description")
+    trv2.heading(5, text="Date added")
+    trv2.column("1", minwidth=0, width=150, anchor='c')
+    trv2.column("2", minwidth=0, width=60, anchor='c')
+    trv2.column("3", minwidth=0, width=60, anchor='c')
+    trv2.column("4", minwidth=0, width=470, anchor='c')
+    trv2.column("5", minwidth=0, width=100, anchor = 'c')
+    trv2.column("6", stretch = NO, minwidth=0, width=0, anchor='c')
+    trv2.grid_columnconfigure(1, weight=1)
+    trv2.grid_columnconfigure(2, weight=1)
+    trv2.grid_columnconfigure(3, weight=1)
+    trv2.grid_columnconfigure(4, weight=10)
+    trv2.grid_columnconfigure(5, weight=1)
+    trv2.grid_columnconfigure(6, weight=0)
+    update(rows)
 
-
-
+    button = ttk.Button(top_frame2, text="Delete movie/show", width=25, command=lambda: selectItem(1))
+    button.pack(side=RIGHT, pady=10, padx=5)
 
 
 #please wite the query here
@@ -303,10 +347,13 @@ update_button = Button(top_frame, text="Update List", command=update_list)
 
 
 
-btn_Clear = Button(bottom_frame, text = "Clear", width = 15, command = clearFrame)
+btn_Clear = Button(bottom_frame, text = "Clear", width = 20, command = clearFrame)
 btn_Clear.pack(side = RIGHT, pady = 10, padx = 5)
 
-myList = Button(bottom_frame, text = "Go to your WatchList", width = 15, command = openWindow)
+myList = Button(bottom_frame, text = "Go to your WatchList", width = 20, command = openWindow)
 myList.pack(side = RIGHT, pady = 10, padx = 5)
+
+defaultButton = ttk.Button(bottom_frame, text="Add watchlist", width=20)
+defaultButton.pack(side=RIGHT, pady=10, padx=5)
 
 front_end_window.mainloop()
