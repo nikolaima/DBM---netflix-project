@@ -81,7 +81,7 @@ def search_now():
 
 
     #print(query)
-    my_query = [query + " LIMIT 150;", "Viewing Rentals"]
+    my_query = [query + ";", "Viewing Rentals"]
     #print(filter)
     #print(my_query)
     display(my_query)
@@ -107,12 +107,6 @@ global front_end_window
 front_end_window=Tk()
 front_end_window.title("NetflixSurfer - What Should I Watch?")
 front_end_window.geometry("1000x800")
-
-#creating a cursor and initializing it
-#my_cursor = db.cursor()
-
-
-#Create Table
 
 #update list
 def update_list():
