@@ -1,25 +1,32 @@
 from tkinter import *
-import random
 import mysql.connector
-import pprint
 from tkinter import ttk
 import tkinter.messagebox as MessageBox
 from login import getUser
 
+#get User from login.py
 global user_name
 user_name = getUser()
 
+#connect to db
+def connect():
+    global db
+    db = mysql.connector.connect(host="localhost", user="root", passwd="1fcn", database='dbm_netflix_project', auth_plugin='mysql_native_password', charset='utf8')
+    return db
 
 
+#logout function to logout and close the program
 def logout():
     front_end_window.destroy()
     import login
     login.root.mainloop()
 
+#function for the sql queries
 def search_now():
     #default filter
    # print("{}, {}, {}, {}".format(var1.get(), var2.get(), drop.get(), inputbox.get()))
     #variables
+    #Checkboxes: when both then show table, when movies then movies view, when tvshows then tvshows view
     checkMovie = int(var1.get())
     checkShow = int(var2.get())
     if ((checkMovie == True) & (checkShow == False)):
@@ -31,24 +38,30 @@ def search_now():
     elif ((checkMovie == False) & (checkShow == False)):
         target = "shows"
 
+    #standard query
     query = "SELECT title, type, description FROM {}".format(target)
 
+    #get variables for input
     actorDirector = drop.get()
     actorDirectorValue = inputbox.get()
     ifGenre = genreSelected.get()
     topic = topicBox.get()
 
-
+    #if else block for the different querys
+    #no genre
     if (ifGenre == 'Every genre'):
-
+        #when no genre + actor
         if ((actorDirector == "Actor") and  inputbox.index("end") != 0):
             query = ("SELECT s.title, s.type, s.release_year, s.description, s.show_id FROM (actor a join show_actor sa on a.actor_id = sa.actor_id) JOIN {} s on sa.show_id = s.show_id WHERE a.actor LIKE '%{}%' AND s.description LIKE '%{}%'").format(target,actorDirectorValue, topic)
+        #no genre + director
         elif((actorDirector == "Director") and  inputbox.index("end") != 0):
             query = ("SELECT s.title, s.type, s.release_year, s.description, s.show_id FROM (director d join show_director sd on d.director_id = sd.director_id) JOIN {} s on sd.show_id = s.show_id WHERE d.director LIKE '%{}%' AND s.description LIKE '%{}%'").format(target, actorDirectorValue, topic)
+        #no genre and no director or actor
         elif inputbox.index("end") == 0:
             query = ("SELECT s.title, s.type, s.release_year, s.description, s.show_id FROM {} s WHERE s.description LIKE '%{}%'").format(target, topic)
 
     else:
+        #genre + actor
         if ((actorDirector == "Actor") and inputbox.index("end") != 0):
             query = ("""
                 SELECT s.title, s.type, s.release_year, s.description , s.show_id FROM 
@@ -59,7 +72,7 @@ def search_now():
                     WHERE a.actor LIKE '%{}%' AND g.genre = '{}' AND s.description LIKE '%{}%'
                     GROUP BY 1,2
                 """).format(target, actorDirectorValue, ifGenre, topic)
-
+        #genre + director
         elif ((actorDirector == "Director") and inputbox.index("end") != 0):
             query = ("""
             SELECT s.title, s.type, s.release_year, s.description, s.description, s.show_id FROM 
@@ -70,6 +83,7 @@ def search_now():
                 WHERE d.director LIKE '%{}%' AND g.genre = '{}' AND s.description LIKE '%{}%'
                 GROUP BY s.title
             """).format(target, actorDirectorValue, ifGenre, topic)
+        #genre + no director/actor
         elif inputbox.index("end") == 0:
             query = ("""
             SELECT s.title, s.type, s.release_year, s.description, s.show_id  FROM {} s
@@ -87,11 +101,7 @@ def search_now():
     display(my_query)
 
 
-def connect():
-    global db
-    db = mysql.connector.connect(host="localhost", user="root", passwd="1fcn", database='dbm_netflix_project', auth_plugin='mysql_native_password', charset='utf8')
-    return db
-
+#function to get the values from the db for the dropdown box for genre
 def getFilterValues():
     con = connect()
     cur = con.cursor()
@@ -102,7 +112,7 @@ def getFilterValues():
         genre.append(i[0])
 
 
-
+#build window
 global front_end_window
 front_end_window=Tk()
 front_end_window.title("NetflixSurfer - What Should I Watch?")
@@ -113,7 +123,7 @@ def update_list():
     pass
 
 
-
+#display query in a treeview in the middle_frame
 def display(query):
     def update(rows):
         for i in rows:
@@ -144,6 +154,7 @@ def display(query):
     trv.grid_columnconfigure(5, weight=0)
     update(rows)
 
+    #create a scrollbar
     vsb = ttk.Scrollbar(middle_frame, orient="vertical", command = trv.yview)
     vsb.pack(side='right', fill ='y')
     trv.configure(yscrollcommand=vsb.set)
@@ -176,7 +187,7 @@ def addWatchlist(a):
 #defaultButton.destroy()
 #trv.bind("<<TreeviewSelect>>", selectItem) # single click, without "index out of range" error
 
-
+#clear all values from frame
 def clearFrame():
     for widget in middle_frame.winfo_children():
         widget.destroy()
@@ -185,10 +196,12 @@ def clearFrame():
     topicBox.delete(0, 'end')
     inputbox.delete(0, 'end')
 
+#clear only middle frame
 def clearMiddleFrame():
     for widget in middle_frame.winfo_children():
         widget.destroy()
 
+#open watchList as a new window
 def openWindow():
     global customer_name
     top = Toplevel()
@@ -235,6 +248,7 @@ def openWindow():
             print("movie is already deleted")
             MessageBox.showinfo("Warning", "Reload your watchlist")
 
+    #treeview for my watchlist
     global trv2
     trv2 = ttk.Treeview(middle_frame2, columns=(1, 2, 3, 4, 5, 6), show="headings", height="28")
     trv2.pack(side='left', expand=True, fill='both')
@@ -261,31 +275,30 @@ def openWindow():
     button.pack(side=RIGHT, pady=10, padx=5)
 
 
+#variable declaration
 var1 = StringVar()
 var2 = StringVar()
 genre = ["Every genre"]
-
-#standard testUser
-#user_name = "admin"
-#user_name = User
 
 
 #variable getvalues
 getFilterValues()
 
+#================================FRONTEND====================================================================
+#============================================================================================================
+
+
+#===========================FRAMES============================================================================
 top_frame = Frame(front_end_window, bd=5, height = 300, width = 1000)
-#top_frame.place(relwidth=1, relheight= 0.20, relx=0.5, rely=0.1, anchor=CENTER)
-#top_frame.columnconfigure(0, weight=3)
 top_frame.pack(side = TOP)
 
 middle_frame = Frame(front_end_window, bg="#80c1ff", bd=5, height = 600, width = 1000)
-#middle_frame.place(relwidth=1, relheight= 0.70, relx=0.5, rely=0.20, anchor=N)
 middle_frame.pack(fill = "both", expand = True)
 
 bottom_frame = Frame(front_end_window, height = 100, width = 1000)
 bottom_frame.pack(fill = X, side = BOTTOM)
 
-
+#=============================LABELS==============================================================================
 label=Label(top_frame, text="Full List of Movies and TV Shows on Netflix", font="Arial 15 bold", fg='red2')
 label.grid(row=0,column=1,sticky="nsew", columnspan = 5)
 label=Label(top_frame, text="Are you wondering what's new – or what's best – on Netflix? \n NetflixSurfer is an application for video streaming services that offers a complete list \n"
@@ -294,13 +307,12 @@ label=Label(top_frame, text="Are you wondering what's new – or what's best –
 label.grid(row=1,column=1,sticky="nsew",  columnspan = 5)
 
 
-#entry box to search
+#====================Filter values========================================================================
 inputbox = Entry(top_frame, width=50)
 inputbox.grid(row=2,column=5, sticky=W)
 
 search_button = Button(top_frame, text="Search", command=search_now)
 search_button.grid(row=2, column=6, padx=10, rowspan = 2)
-
 
 types = Label(top_frame, text="Enter a topic you want to watch:")
 types.grid(row=3, column=4, sticky=W)
@@ -340,13 +352,8 @@ w2.grid(row=3, column = 2, pady = 5, columnspan = 2)
 label_w2 = Label(top_frame, text="Genre:")
 label_w2.grid(row=3, column=1, sticky=W, pady = 5)
 
-#update
-update_button = Button(top_frame, text="Update List", command=update_list)
-#update_button.grid(row=2, column=1, padx=10, pady=10, sticky=W)
 
-
-
-
+#==============================BUTTONS===============================================================
 btn_Clear = Button(bottom_frame, text = "Clear", width = 20, command = clearFrame)
 btn_Clear.pack(side = RIGHT, pady = 10, padx = 5)
 
@@ -358,9 +365,6 @@ logout = Button(top_frame, text='Logout ',
                 activebackground='blue',
                 width=13, height=1, command=logout, compound=RIGHT)
 logout.grid(row = 0, column = 7, sticky = E)
-
-#defaultButton = ttk.Button(bottom_frame, text="Add watchlist", width=20)
-#defaultButton.pack(side=RIGHT, pady=10, padx=5)
 
 defaultButton = ttk.Button(bottom_frame, text="Add watchlist", width=20, command=lambda: addWatchlist(1))
 defaultButton.pack(side=RIGHT, pady=10, padx=5)
